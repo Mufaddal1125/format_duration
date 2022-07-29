@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from format_duration.src.format_duration.enums import DurationLimit
+from .enums import DurationLimit
 
 
 def format_duration(duration: timedelta, abbreviated: bool = False, limit: DurationLimit = None) -> str:
