@@ -31,6 +31,7 @@ jobs:
         run: python3 -m pip install --upgrade build
       - name: Build package
         run: python3 -m build
+        working-directory: /app
       - name: Publish to PyPI
         if: github.event.inputs.repository == 'pypi'
         uses: pypa/gh-action-pypi-publish@release/v1
