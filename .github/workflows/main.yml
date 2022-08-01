@@ -30,8 +30,6 @@ jobs:
         uses: actions/setup-python@v4.1.0
       - name: Install deps
         run: python3 -m pip install --upgrade build
-      - name: print dir
-        run: pwd && ls
       - name: Build package
         run: python3 -m build
       - name: Publish to PyPI
