@@ -1,11 +1,18 @@
+import re
 from datetime import timedelta
+from typing import Optional
 
 from .enums import DurationLimit
+from .utils import contains_word
 
 
 def format_duration(duration: timedelta, abbreviated: bool = False, limit: DurationLimit = None) -> str:
     """
-    Format a duration in a human readable format.
+    Format a duration in a human-readable format.
+    @param duration: The duration to format
+    @param abbreviated: Whether to use abbreviated units
+    @param limit: limit for units
+    @return: str
     """
     years_count = duration.days // 365
     months_count = duration.days // 30
@@ -51,3 +58,40 @@ def format_duration(duration: timedelta, abbreviated: bool = False, limit: Durat
         return f'{minutes} {seconds}'
     else:
         return f'{seconds}'
+
+
+def parse_duration(duration: str) -> Optional[timedelta]:
+    """
+    Parse a duration in a human-readable format.
+    @param duration: The duration to parse
+    @return: timedelta
+    """
+    duration = duration.lower()
+    parsed_duration = timedelta()
+    for x in duration.split(','):
+        if contains_word(x, 's') or contains_word(x, 'secs') or contains_word(x, 'second') or contains_word(x, 'seconds'):
+            s = x.replace('seconds', '').replace('second', '').replace('secs', '').replace('sec', '').replace('s', '').strip()
+            parsed_duration += timedelta(seconds=int(s))
+        elif contains_word(x, 'm') or contains_word(x, 'min') or contains_word(x, 'mins') or contains_word(x, 'minute') or contains_word(x, 'minutes'):
+            s = x.replace('minutes', '').replace('minute', '').replace('mins', '').replace('min', '').replace('m', '').strip()
+            parsed_duration += timedelta(minutes=int(s))
+        elif contains_word(x, 'h') or contains_word(x, 'hr') or contains_word(x, 'hrs') or contains_word(x, 'hour') or contains_word(x, 'hours'):
+            s = x.replace('hours', '').replace('hour', '').replace('hrs', '').replace('hr', '').replace('h', '').strip()
+            parsed_duration += timedelta(hours=int(s))
+        elif contains_word(x, 'd') or contains_word(x, 'day') or contains_word(x, 'days'):
+            s = x.replace('days', '').replace('day', '').replace('d', '').strip()
+            parsed_duration += timedelta(days=int(s))
+        elif contains_word(x, 'mo') or contains_word(x, 'mon') or contains_word(x, 'mons') or contains_word(x, 'month') or contains_word(x, 'months'):
+            s = x.replace('months', '').replace('month', '').replace('mons', '').replace('mon', '').replace('mo', '').strip()
+            parsed_duration += timedelta(days=int(s) * 30)
+        elif contains_word(x, 'yr') or contains_word(x, 'yrs') or contains_word(x, 'year') or contains_word(x, 'years'):
+            s = x.replace('years', '').replace('year', '').replace('yrs', '').replace('yr', '').replace('y', '').strip()
+            parsed_duration += timedelta(days=int(s) * 365)
+        elif re.match(r'[\d:?]*', x):
+            s = x.split(':')
+            parsed_duration += timedelta(seconds=int(s[2]), minutes=int(s[1]), hours=int(s[0]))
+            if s.__len__() > 3:
+                parsed_duration += timedelta(milliseconds=int(s[3]))
+            if s.__len__() > 4:
+                parsed_duration += timedelta(microseconds=int(s[4]))
+    return parsed_duration
