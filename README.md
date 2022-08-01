@@ -1,3 +1,4 @@
+[![Downloads](https://static.pepy.tech/personalized-badge/format-duration?period=total&units=international_system&left_color=black&right_color=blue&left_text=Downloads)](https://pepy.tech/project/format-duration)
 # format_duration
 #### Python module to convert duration to human readable format
 
