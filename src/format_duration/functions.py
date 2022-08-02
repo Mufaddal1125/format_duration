@@ -3,7 +3,7 @@ from datetime import timedelta
 from typing import Optional
 
 from .enums import DurationLimit
-from .utils import contains_word, find_words
+from .utils import find_words
 
 
 def format_duration(duration: timedelta, abbreviated: bool = False, limit: DurationLimit = None) -> str:
@@ -60,52 +60,64 @@ def format_duration(duration: timedelta, abbreviated: bool = False, limit: Durat
         return f'{seconds}'
 
 
-def parse_duration(duration: str, separator: str, time_separator: str = ':') -> Optional[timedelta]:
+def parse_duration(duration: str, time_separator: str = ':') -> Optional[timedelta]:
     """
     Parse a duration in a human-readable format.
     @param duration: The duration to parse
-    @param separator: separator for units
-    @param time_separator: separator for time units (default: ':')
+    @param time_separator: separator for time units (e.g. ':' for '4:23:06') default is ':'
     @return: timedelta
     """
-    duration = duration.lower()
-    parsed_duration = timedelta()
-    for x in duration.split(separator):
-        # find the units
-        second = find_words(x, ['second', 'seconds', 'sec', 's', 'secs'])
-        minute = find_words(x, ['minute', 'minutes', 'min', 'mins', 'm'])
-        hour = find_words(x, ['hour', 'hours', 'h', 'hr', 'hrs'])
-        day = find_words(x, ['day', 'days', 'd'])
-        month = find_words(x, ['month', 'months', 'mo', 'mos'])
-        year = find_words(x, ['year', 'years', 'yr', 'yrs'])
+    try:
+        duration = duration.lower()
+        parsed_duration = timedelta()
+        # remove special characters except separator and time separator
+        duration = re.sub(rf'[^\w\s{time_separator}]', '', duration)
+        duration_split = duration.split()
+        for i, x in enumerate(duration_split):
+            # find the units
+            second = find_words(x, ['second', 'seconds', 'sec', 's', 'secs'])
+            minute = find_words(x, ['minute', 'minutes', 'min', 'mins', 'm'])
+            hour = find_words(x, ['hour', 'hours', 'h', 'hr', 'hrs'])
+            day = find_words(x, ['day', 'days', 'd'])
+            month = find_words(x, ['month', 'months', 'mo', 'mos'])
+            year = find_words(x, ['year', 'years', 'yr', 'yrs'])
 
-        x = x.strip()
+            x = x.strip()
 
-        # if any of the unit are found, add them to the duration
-        if second is not None:
-            # remove the unit from the string
-            s = x.replace(second, '').strip()
-            parsed_duration += timedelta(seconds=int(s))
-        elif minute is not None:
-            s = x.replace(minute, '').strip()
-            parsed_duration += timedelta(minutes=int(s))
-        elif hour is not None:
-            s = x.replace(hour, '').strip()
-            parsed_duration += timedelta(hours=int(s))
-        elif day is not None:
-            s = x.replace(day, '').strip()
-            parsed_duration += timedelta(days=int(s))
-        elif month is not None:
-            s = x.replace(month, '').strip()
-            parsed_duration += timedelta(days=int(s) * 30)
-        elif year is not None:
-            s = x.replace(year, '').strip()
-            parsed_duration += timedelta(days=int(s) * 365)
-        elif re.match(rf'\d+{time_separator}\d+{time_separator}?\d+{time_separator}?\d+', x):
-            s = x.split(':')
-            parsed_duration += timedelta(seconds=int(s[2]), minutes=int(s[1]), hours=int(s[0]))
-            if s.__len__() > 3:
-                parsed_duration += timedelta(milliseconds=int(s[3]))
-            if s.__len__() > 4:
-                parsed_duration += timedelta(microseconds=int(s[4]))
-    return parsed_duration
+            # if any of the unit are found, add them to the duration
+            if second is not None:
+                # remove the unit from the string
+                s = duration_split[i - 1].strip()
+                if s.isdigit():
+                    parsed_duration += timedelta(seconds=int(s))
+            elif minute is not None:
+                s = duration_split[i - 1].strip()
+                if s.isdigit():
+                    parsed_duration += timedelta(minutes=int(s))
+            elif hour is not None:
+                s = duration_split[i - 1].strip()
+                if s.isdigit():
+                    parsed_duration += timedelta(hours=int(s))
+            elif day is not None:
+                s = duration_split[i - 1].strip()
+                if s.isdigit():
+                    parsed_duration += timedelta(days=int(s))
+            elif month is not None:
+                s = duration_split[i - 1].strip()
+                if s.isdigit():
+                    parsed_duration += timedelta(days=int(s) * 30)
+            elif year is not None:
+                s = duration_split[i - 1].strip()
+                if s.isdigit():
+                    parsed_duration += timedelta(days=int(s) * 365)
+            elif re.match(rf'\d+{time_separator}\d+[\d{time_separator}]*', x):
+                s = x.split(':')
+                parsed_duration += timedelta(seconds=int(s[2]), minutes=int(s[1]), hours=int(s[0]))
+                if s.__len__() > 3:
+                    parsed_duration += timedelta(milliseconds=int(s[3]))
+                if s.__len__() > 4:
+                    parsed_duration += timedelta(microseconds=int(s[4]))
+        return parsed_duration
+    except ValueError as e:
+        print('Error parsing duration for duration ', duration)
+        raise
