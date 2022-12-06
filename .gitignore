@@ -1,2 +1,4 @@
+__pycache__*
 dist
 format_duration.egg-info
+test.py
