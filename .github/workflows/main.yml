@@ -43,7 +43,6 @@ jobs:
         COMMIT_MSG: ${{ github.event.head_commit.message }}
       run: |
         bump2version --current-version $(python setup.py --version ) ${{ inputs.bump_version }} setup.py
-    - name: commit version
     - uses: EndBug/add-and-commit@v9 # You can change this to use a specific version.
       with:
         add: '.'
