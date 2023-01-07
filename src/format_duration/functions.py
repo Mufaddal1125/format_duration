@@ -65,7 +65,7 @@ def format_duration(
 
     if years_count > 0:
         return f"{years} {months} {days} {hours} {minutes} {seconds}"
-    elif days_count > 30:
+    elif months_count > 0:
         return f"{months} {days} {hours} {minutes} {seconds}"
     elif days_count > 0:
         return f"{days} {hours} {minutes} {seconds}"
